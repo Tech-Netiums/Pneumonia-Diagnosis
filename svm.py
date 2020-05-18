@@ -13,6 +13,8 @@ from keras.preprocessing.image import ImageDataGenerator
 from sklearn import svm, metrics, datasets
 from sklearn.utils import Bunch
 from sklearn.model_selection import GridSearchCV, train_test_split
+from joblib import dump, load
+
 
 from skimage.io import imread
 from skimage.transform import resize
@@ -79,7 +81,7 @@ clf.fit(train_set.data, train_set.target)
 #%%
 results = pd.DataFrame(clf.cv_results_)
 
-trained_grid_search = pickle.dumps(clf)
+dump(clf, 'trained_grid_search.joblib') 
 
 #%%
 
