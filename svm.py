@@ -12,7 +12,7 @@ import pickle
 from keras.preprocessing.image import ImageDataGenerator
 from sklearn import svm, metrics, datasets
 from sklearn.utils import Bunch
-from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.model_selection import GridSearchCV, train_test_split, StratifiedShuffleSplit
 from joblib import dump, load
 
 
@@ -65,9 +65,8 @@ def load_image_files(container_path, dimension=(64, 64, 3)):
 
 #%%
 
-train_set = load_image_files("C:/Users/louis/Documents/GitHub/Pneumonia-Diagnosis/train")
-val_set = load_image_files("C:/Users/louis/Documents/GitHub/Pneumonia-Diagnosis/val")
-test_set = load_image_files("C:/Users/louis/Documents/GitHub/Pneumonia-Diagnosis/test")
+train_set = load_image_files("C:/Users/louis/Documents/Louis/ecole/2A/Méthodes d'apprentissage/chest_xray/train")
+test_set = load_image_files("C:/Users/louis/Documents/Louis/ecole/2A/Méthodes d'apprentissage/chest_xray/test")
 
 #%%
 param_grid = [
@@ -78,17 +77,91 @@ svc = svm.SVC()
 clf = GridSearchCV(svc, param_grid)
 clf.fit(train_set.data, train_set.target)
 
-#%%
-results = pd.DataFrame(clf.cv_results_)
+#dump(clf, 'trained_grid_search.joblib') 
 
-dump(clf, 'trained_grid_search.joblib') 
+#%%
+
+clf = load('trained_grid_search.joblib') 
+
+results = pd.DataFrame(clf.cv_results_)
 
 #%%
 
 pred = clf.predict(test_set.data)
+
 
 #%%
 
 print(metrics.accuracy_score(test_set.target, pred))
 print(metrics.f1_score(test_set.target, pred))
 print(metrics.confusion_matrix(test_set.target, pred))
+
+
+#%%
+
+param_grid2 = [{'C': [100, 1000, 10000], 'gamma': [0.01,0.001], 'kernel': ['rbf']}]
+clf2 = GridSearchCV(svc, param_grid2)
+clf2.fit(train_set.data, train_set.target)
+#%%
+dump(clf2, 'trained_grid_search2.joblib') 
+
+#%%
+
+results2 = pd.DataFrame(clf2.cv_results_)
+
+#%%
+pred = clf2.predict(test_set.data)
+print(metrics.accuracy_score(test_set.target, pred))
+print(metrics.f1_score(test_set.target, pred))
+print(metrics.confusion_matrix(test_set.target, pred))
+
+
+#%% 
+param_grid3 = [{'C': [100, 1000], 'gamma': [0.01,0.001], 'kernel': ['rbf'], 'class_weight' : ['balanced'] }]
+clf3 = GridSearchCV(svc, param_grid3)
+clf3.fit(train_set.data, train_set.target)
+
+#%%
+
+dump(clf3, 'trained_grid_search3.joblib')
+
+#%% 
+
+results3 = pd.DataFrame(clf3.cv_results_)
+pred = clf3.predict(test_set.data)
+print(metrics.accuracy_score(test_set.target, pred))
+print(metrics.f1_score(test_set.target, pred))
+print(metrics.confusion_matrix(test_set.target, pred))
+
+#%%
+
+param_grid4 = [{'C': [100, 1000], 'gamma': [0.001, 0.0001], 'kernel': ['rbf']}]
+clf4 = GridSearchCV(svc, param_grid4)
+clf4.fit(train_set.data, train_set.target)
+#%%
+dump(clf4, 'trained_grid_search4.joblib')
+
+#%%
+
+clf6 = svm.SVC(C = 1000000000000000000000000000, gamma= 0.00000001).fit(train_set.data, train_set.target)
+
+
+#%%
+
+pred = clf6.predict(test_set.data)
+print(metrics.accuracy_score(test_set.target, pred))
+print(metrics.f1_score(test_set.target, pred))
+print(metrics.confusion_matrix(test_set.target, pred))
+
+#%%
+
+C_range = np.logspace(-2, 10, 13)
+gamma_range = np.logspace(-9, 3, 13)
+param_grid5 = dict(gamma=gamma_range, C=C_range)
+cv = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=42)
+clf5 = GridSearchCV(svc, param_grid5, cv = cv)
+clf5.fit(train_set.data, train_set.target)
+
+
+
+clf5 = svm.SVC(C= 10000, gamma= 0.0001, kernel = 'rbf')
