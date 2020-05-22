@@ -1,7 +1,7 @@
 import numpy as np 
 from sklearn.metrics import confusion_matrix, classification_report
 
-from preprocessing import *
+from preprocessing_network import *
 
 def print_predictions(my_model, gen, name):
     prediction = my_model.predict_generator(generator = gen)

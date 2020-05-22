@@ -1,8 +1,8 @@
 import numpy as np
 
-from model import *
-from preprocessing import *
-from scoring import *
+from model_network import *
+from preprocessing_network import *
+from scoring_network import *
 
 #création du modèle
 classifier = XRAY_classifier()
