@@ -15,7 +15,7 @@ from sklearn.utils import Bunch
 from sklearn.model_selection import GridSearchCV, train_test_split, StratifiedShuffleSplit
 from joblib import dump, load
 
-
+from sklearn import preprocessing
 from skimage.io import imread
 from skimage.transform import resize
 from pathlib import Path
@@ -68,16 +68,27 @@ def load_image_files(container_path, dimension=(64, 64, 3)):
 train_set = load_image_files("C:/Users/louis/Documents/Louis/ecole/2A/Méthodes d'apprentissage/chest_xray/train")
 test_set = load_image_files("C:/Users/louis/Documents/Louis/ecole/2A/Méthodes d'apprentissage/chest_xray/test")
 
+
+#%%
+scaler = preprocessing.StandardScaler().fit(train_set.data)
+normed_train_set = scaler.transform(train_set.data,True)
+normed_test_set = scaler.transform(test_set.data, True)
+
+#%%
+
+negative_train_set = 255 - train_set.data 
+negative_test_set = 255 - test_set.data
 #%%
 param_grid = [
-  {'C': [1, 10, 100, 1000], 'kernel': ['linear']},
-  {'C': [1, 10, 100, 1000], 'gamma': [0.001, 0.0001], 'kernel': ['rbf']},
+  {'C': [1, 10, 100], 'gamma': [0.0001,0.00001], 'kernel': ['rbf']},
  ]
 svc = svm.SVC()
 clf = GridSearchCV(svc, param_grid)
-clf.fit(train_set.data, train_set.target)
+clf.fit(normed_train_set, train_set.target)
 
-#dump(clf, 'trained_grid_search.joblib') 
+#%%
+dump(clf, 'trained_normed_grid_search.joblib') 
+results = pd.DataFrame(clf.cv_results_)
 
 #%%
 
@@ -87,7 +98,7 @@ results = pd.DataFrame(clf.cv_results_)
 
 #%%
 
-pred = clf.predict(test_set.data)
+pred = clf.predict(normed_test_set)
 
 
 #%%
@@ -143,15 +154,15 @@ dump(clf4, 'trained_grid_search4.joblib')
 
 #%%
 
-clf6 = svm.SVC(C = 1000000000000000000000000000, gamma= 0.00000001).fit(train_set.data, train_set.target)
+clf6 = svm.SVC(C= 1, gamma = 0.00001).fit(normed_train_set, train_set.target)
 
 
 #%%
 
-pred = clf6.predict(test_set.data)
-print(metrics.accuracy_score(test_set.target, pred))
-print(metrics.f1_score(test_set.target, pred))
-print(metrics.confusion_matrix(test_set.target, pred))
+pred = clf6.predict(normed_train_set.data)
+print(metrics.accuracy_score(train_set.target, pred))
+print(metrics.f1_score(train_set.target, pred))
+print(metrics.confusion_matrix(train_set.target, pred))
 
 #%%
 
