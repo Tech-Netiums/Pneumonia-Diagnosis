@@ -14,11 +14,12 @@ from sklearn import svm, metrics, datasets
 from sklearn.utils import Bunch
 from sklearn.model_selection import GridSearchCV, train_test_split, StratifiedShuffleSplit
 from joblib import dump, load
-
+from preprocessing import convolution2D, laplacian_of_gaussian_33, median_cut
 from sklearn import preprocessing
 from skimage.io import imread
 from skimage.transform import resize
 from pathlib import Path
+from skimage.color import rgb2gray
 
 #%%
 def load_image_files(container_path, dimension=(64, 64, 3)):
@@ -76,18 +77,29 @@ normed_test_set = scaler.transform(test_set.data, True)
 
 #%%
 
-negative_train_set = 255 - train_set.data 
-negative_test_set = 255 - test_set.data
+gray_train_set = [rgb2gray(img) for img in train_set.images]
+gray_test_set =  [rgb2gray(img) for img in test_set.images]
+
+#%%
+
+laplacian_train_set = [convolution2D(img, laplacian_of_gaussian_33).flatten() for img in gray_train_set]
+laplacian_test_set = [convolution2D(img, laplacian_of_gaussian_33).flatten() for img in gray_test_set]
+
+#%%
+
+median_cut_train_set = [median_cut(img).flatten() for img in gray_train_set] 
+median_cut_test_set = [median_cut(img).flatten() for img in gray_test_set]
+
 #%%
 param_grid = [
-  {'C': [1, 10, 100], 'gamma': [0.0001,0.00001], 'kernel': ['rbf']},
+  {'C': [1, 10, 100, 1000], 'gamma': [0.0001,0.001, 0.01], 'kernel': ['rbf']},
  ]
 svc = svm.SVC()
 clf = GridSearchCV(svc, param_grid)
-clf.fit(normed_train_set, train_set.target)
+clf.fit(median_cut_train_set, train_set.target)
 
 #%%
-dump(clf, 'trained_normed_grid_search.joblib') 
+dump(clf, 'median_cut_grid_search.joblib') 
 results = pd.DataFrame(clf.cv_results_)
 
 #%%
@@ -98,7 +110,7 @@ results = pd.DataFrame(clf.cv_results_)
 
 #%%
 
-pred = clf.predict(normed_test_set)
+pred = clf.predict(median_cut_test_set)
 
 
 #%%
@@ -154,15 +166,15 @@ dump(clf4, 'trained_grid_search4.joblib')
 
 #%%
 
-clf6 = svm.SVC(C= 1, gamma = 0.00001).fit(normed_train_set, train_set.target)
+clf6 = svm.SVC(C=100000000, gamma= 0.1).fit(median_cut_train_set, train_set.target)
 
 
 #%%
 
-pred = clf6.predict(normed_train_set.data)
-print(metrics.accuracy_score(train_set.target, pred))
-print(metrics.f1_score(train_set.target, pred))
-print(metrics.confusion_matrix(train_set.target, pred))
+pred = clf6.predict(median_cut_test_set)
+print(metrics.accuracy_score(test_set.target, pred))
+print(metrics.f1_score(test_set.target, pred))
+print(metrics.confusion_matrix(test_set.target, pred))
 
 #%%
 

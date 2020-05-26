@@ -26,8 +26,8 @@ def invert(img) : #renvoit le négatif d'img
 def convolution2D(img, kernel):
     img_array = np.array(img)
     conv_array = ndimage.convolve(img_array, np.asarray(kernel), mode='constant', cval=0.0)
-    img_conv = Image.fromarray(conv_array)
-    return (img_conv)
+    #img_conv = Image.fromarray(conv_array)
+    return (conv_array)
 
 def somme_img(img1,img2):
     img1_array = np.array(img1)
@@ -48,5 +48,5 @@ def median_cut(img) : #atténuation du bruit
                     L.append(img_array[i+l][j+m])
             L.sort()
             img_cut_array[i][j] = L[4]
-    return (Image.fromarray(img_cut_array))
+    return (img_cut_array)
 
